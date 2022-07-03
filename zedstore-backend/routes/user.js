@@ -1,89 +1,20 @@
 const router = require("express").Router();
-const { verifyTokenAndAuth, verifyTokenAndAdmin } = require("./verifyToken");
-const CryptJS = require("crypto-js");
-const User = require("../models/User");
+const { verifyTokenAndAuth, verifyTokenAndAdmin } = require("../controllers/verifyTokenController");
+const {updateUser,getUser,getAllUsers,getUserStats,deleteUser} = require('../controllers/userController');
 
-router.put("/:id", verifyTokenAndAuth, async (req, res) => {
-  console.log("Hello");
-  if (req.body.password) {
-    req.body.password = CryptJS.AES.encrypt(
-      req.body.password,
-      process.env.ENCRYPT_SEC
-    ).toString();
-  }
+//Update User
+router.put("/:id", verifyTokenAndAuth, updateUser);
 
-  try {
-    const updatedUser = await User.findByIdAndUpdate(
-      req.params.id,
-      {
-        $set: req.body,
-      },
-      { new: true }
-    );
-    res.status(200).json(updatedUser);
-  } catch (err) {
-    res.status(500).json(err);
-  }
-});
+//Get User
+router.get("/find/:id", verifyTokenAndAdmin, getUser);
 
-//GET
-router.get("/find/:id", verifyTokenAndAdmin, async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-    res.status(200).json(user);
-  } catch (err) {
-    res.status(500).json(err);
-  }
-});
+//Get all users
+router.get("/", verifyTokenAndAdmin, getAllUsers);
 
-//GET all users
+//Get user Stats
+router.get("/stats", verifyTokenAndAdmin, getUserStats);
 
-router.get("/", verifyTokenAndAdmin, async (req, res) => {
-  const query = req.query.new;
-  try {
-    const users = query
-      ? await User.find().sort({ _id: -1 }).limit(5)
-      : await User.find();
-    res.status(200).json(users);
-  } catch (err) {
-    res.status(500).json(err);
-  }
-});
-
-//GET user Stats
-
-router.get("/stats", verifyTokenAndAdmin, async (req, res) => {
-  const date = new Date();
-  const lastyear = new Date(date.setFullYear(date.setFullYear() - 1));
-  try {
-    const data = await User.aggregate([
-      { $match: { createdAt: { $gte: lastyear } } },
-      {
-        $project: {
-          month: { $month: "$createdAt" },
-        },
-      },
-      {
-        $group: {
-          _id: "$month",
-          total: { $sum: 1 },
-        },
-      },
-    ]);
-    res.status(200).json(data);
-  } catch (err) {
-    res.status(500).json(err);
-  }
-});
-
-//DELETE
-router.delete("/:id", verifyTokenAndAuth, async (req, res) => {
-  try {
-    await User.findByIdAndDelete(req.params.id);
-    res.status(200).json("User has deleted");
-  } catch (err) {
-    res.status(500).json(err);
-  }
-});
+//Delete User
+router.delete("/:id", verifyTokenAndAuth, deleteUser);
 
 module.exports = router;

@@ -6,6 +6,13 @@ const dotenv = require("dotenv");
 dotenv.config();
 const PORT = process.env.PORT || 3500;
 
+mongoose.connect(process.env.MONGO_URL, () => {
+  console.log("MongoDB Connected");
+  app.listen(PORT, () => {
+    console.log(`Server started on port ${PORT}`);
+  });
+});
+
 // Routes imports
 const userRoute = require("./routes/user");
 const authRoute = require("./routes/auth");
@@ -13,13 +20,6 @@ const productsRoute = require("./routes/product");
 const cartsRoute = require("./routes/cart");
 const ordersRoute = require("./routes/order");
 const checkoutRoute = require("./routes/stripe");
-
-mongoose.connect(process.env.MONGO_URL, () => {
-  console.log("MongoDB Connected");
-  app.listen(PORT, () => {
-    console.log(`Server started on port ${PORT}`);
-  });
-});
 
 // Express Middlewares
 
